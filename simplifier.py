@@ -54,13 +54,17 @@ def simplify_step(node, steps):
         steps.append(f"Idempotencia: {to_string(node)} → {to_string(node.left)}")
         return node.left, True
     
-    ##complemento
-    if node.value == '+' and ((node.left.value + "'" == node.right.value) or (node.right.value + "'" == node.left.value)):
+    if node.value == '+' and node.left and node.right and (
+    to_string(node.left) + "'" == to_string(node.right) or
+    to_string(node.right) + "'" == to_string(node.left)):
         steps.append(f"Complemento: {to_string(node)} → 1")
         return Node('1'), True
-    if node.value == '*' and ((node.left.value + "'" == node.right.value) or (node.right.value + "'" == node.left.value)):
+    if node.value == '*' and node.left and node.right and (
+        to_string(node.left) + "'" == to_string(node.right) or
+        to_string(node.right) + "'" == to_string(node.left)):
         steps.append(f"Complemento: {to_string(node)} → 0")
         return Node('0'), True
+
     
     ##absorcion
     if node.value == '+':
