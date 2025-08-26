@@ -9,10 +9,25 @@ def simplify_step(node, steps):
     node.right, c2 = simplify_step(node.right, steps)
     changed |= c1 or c2
 
+    ##doble negacion
     if node.value == "'" and node.left.value == "'":
         steps.append(f"Doble negación: {to_string(node)} → {to_string(node.left.left)}")
         return node.left.left, True
-
+    
+    ##morgan
+    if node.value == "'" and node.left:
+        if node.left.value == '+':
+            # (A + B)' → A'*B'
+            new_node = Node('*', Node("'", node.left.left), Node("'", node.left.right))
+            steps.append(f"De Morgan: {to_string(node)} → {to_string(new_node)}")
+            return simplify_total(new_node, steps), True
+        elif node.left.value == '*':
+            # (A * B)' → A'+B'
+            new_node = Node('+', Node("'", node.left.left), Node("'", node.left.right))
+            steps.append(f"De Morgan: {to_string(node)} → {to_string(new_node)}")
+            return simplify_total(new_node, steps), True
+     
+    ##identidad/anulacion
     if node.value == '+':
         if node.left.value == '0':
             steps.append(f"Identidad: {to_string(node)} → {to_string(node.right)}")
@@ -33,18 +48,21 @@ def simplify_step(node, steps):
         if node.left.value == '0' or node.right.value == '0':
             steps.append(f"Anulación: {to_string(node)} → 0")
             return Node('0'), True
-
+        
+    ##idempotencia
     if node.value in ['+', '*'] and to_string(node.left) == to_string(node.right):
         steps.append(f"Idempotencia: {to_string(node)} → {to_string(node.left)}")
         return node.left, True
-
+    
+    ##complemento
     if node.value == '+' and ((node.left.value + "'" == node.right.value) or (node.right.value + "'" == node.left.value)):
         steps.append(f"Complemento: {to_string(node)} → 1")
         return Node('1'), True
     if node.value == '*' and ((node.left.value + "'" == node.right.value) or (node.right.value + "'" == node.left.value)):
         steps.append(f"Complemento: {to_string(node)} → 0")
         return Node('0'), True
-
+    
+    ##absorcion
     if node.value == '+':
         if node.left.value == '*' and (to_string(node.left.left) == to_string(node.right) or to_string(node.left.right) == to_string(node.right)):
             steps.append(f"Absorción: {to_string(node)} → {to_string(node.right)}")
@@ -59,7 +77,8 @@ def simplify_step(node, steps):
         if node.right.value == '+' and (to_string(node.right.left) == to_string(node.left) or to_string(node.right.right) == to_string(node.left)):
             steps.append(f"Absorción: {to_string(node)} → {to_string(node.left)}")
             return node.left, True
-
+    
+    ##distributiva
     if node.value == '*' and ((node.left.value == '+') or (node.right.value == '+')):
         if node.right.value == '+':
             new_node = Node('+', Node('*', node.left, node.right.left), Node('*', node.left, node.right.right))

@@ -100,6 +100,49 @@ def show_help():
     )
     messagebox.showinfo("Ayuda - Reglas de Simplificación", rules)
 
+def save_to_file(entry, table, result_var):
+    from tkinter import filedialog
+
+    expr = entry.get().strip()
+    if not expr:
+        messagebox.showwarning("Atención", "El campo de expresión está vacío. No se puede guardar.")
+        return
+
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".txt",
+        filetypes=[("Archivos de texto", "*.txt")],
+        title="Guardar simplificación"
+    )
+    if not file_path:
+        return
+
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("REPORTE DE SIMPLIFICACIÓN BOOLEANA\n")
+            f.write("_"*60 + "\n\n")
+            f.write("Expresión original:\n")
+            f.write(expr + "\n\n")
+
+            f.write("Pasos de simplificación:\n")
+            f.write("_"*60 + "\n")
+            if not table.get_children():
+                f.write("No se aplicaron simplificaciones.\n")
+            else:
+                f.write(f"{'ANTES':<25} {'LEY':<20} {'DESPUÉS':<25}\n")
+                f.write("_"*60 + "\n")
+                for row_id in table.get_children():
+                    row = table.item(row_id)["values"]
+                    f.write(f"{str(row[0]):<25} {str(row[1]):<20} {str(row[2]):<25}\n")
+            f.write("\n")
+
+            f.write("RESULTADO FINAL:\n")
+            f.write(result_var.get() + "\n")
+
+        messagebox.showinfo("Éxito", f"Archivo guardado en:\n{file_path}")
+    except Exception as e:
+        messagebox.showerror("Error al guardar", str(e))
+
+
 def create_ui():
     ctk.set_appearance_mode("dark")
     ctk.set_default_color_theme("blue")
@@ -211,5 +254,19 @@ def create_ui():
         command=show_help
         )
     help.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)
+
+    save_button = ctk.CTkButton(
+        buttons_frame,
+        text="Guardar archivo",
+        width=180,
+        height=45,
+        corner_radius=25,
+        font=("Arial", 16, "bold"),
+        fg_color=("#1e3c72", "#9d50bb"),
+        hover_color=("#3A7CA5", "#8A2BE2"),
+        text_color="#FFFFFF",
+        command=lambda: save_to_file(entry, table, result_var)
+        )
+    save_button.pack(side="left", padx=5)
 
     return root
